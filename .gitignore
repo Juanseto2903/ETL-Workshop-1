@@ -1,0 +1,4 @@
+processed/
+__pycache__/
+.env
+.venv
