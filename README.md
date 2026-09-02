@@ -1,6 +1,6 @@
 # Workshop-1: From Business Requirements to a Dimensional Data Warehouse
 
-> ⚠️ This README is a work in progress. It currently covers business requirements, requirements traceability, and initial data profiling. Remaining sections (dimensional model, ETL pipeline, Data Warehouse implementation, analytical queries, BI visualization, and final validation) will be added as the project progresses.
+> ⚠️ This README is a work in progress. It currently covers business requirements, requirements traceability, initial data profiling, the dimensional model, and the ETL pipeline (extract, prepare, transform). Remaining sections (Data Warehouse implementation, analytical queries, BI visualization, and final validation) will be added as the project progresses.
 
 ## 🎯 Project Objective
 
@@ -45,7 +45,7 @@ The source dataset (`data/raw/candidates.csv`) contains **50,000 candidate appli
 
 - **Shape:** 50,000 rows × 10 columns.
 - **Missing values:** none found in any column.
-- **Duplicates:** no fully duplicated rows; 167 duplicate email addresses (no duplicates when checking First Name + Last Name + Email together), indicating some candidates may have applied more than once. This will be addressed explicitly during data preparation.
+- **Duplicates:** no fully duplicated rows; 167 duplicate email addresses (no duplicates when checking First Name + Last Name + Email together), indicating some candidates may have applied more than once. This was addressed explicitly during data preparation (see below).
 - **Country:** 244 unique values.
 - **Seniority:** 7 unique values (Intern, Trainee, Junior, Mid-Level, Senior, Lead, Architect), almost evenly distributed (~14% each).
 - **Technology:** 24 unique values, covering roles such as Data Engineer, DevOps, Development (Backend/Frontend/FullStack/CMS), QA, Security, Business Intelligence, Sales, and more.
@@ -53,6 +53,44 @@ The source dataset (`data/raw/candidates.csv`) contains **50,000 candidate appli
 - **YOE:** ranges from 0 to 30 years (mean ≈ 15.3).
 - **Scores:** both Code Challenge Score and Technical Interview Score range from 0 to 10 (mean ≈ 5.0 each), with no out-of-range values.
 - **Hiring outcome:** applying the business rule to the full dataset results in **6,698 candidates HIRED (13.4%)** and **43,302 candidates NOT HIRED (86.6%)**.
+
+## ⭐ Dimensional Data Model (Task 2)
+
+**Business process:** the candidate technical evaluation and hiring decision process.
+
+**Grain:** one row in `Fact_Application` represents one candidate application, evaluated on a specific date, for a specific technology, resulting in a Code Challenge Score, a Technical Interview Score, and a derived hiring outcome.
+
+| Table | Type | Purpose |
+|---|---|---|
+| `Dim_Date` | Dimension | Enables temporal analysis of hiring behavior (R1) |
+| `Dim_Technology` | Dimension | Enables comparison of hiring outcomes across technologies (R2) |
+| `Dim_Candidate_Profile` | Dimension | Groups Seniority + YOE range for candidate-profile analysis (R3) |
+| `Dim_Country` | Dimension | Enables geographic comparison of applications and hiring rates (R4) |
+| `Fact_Application` | Fact | Grain-level table with FKs to all four dimensions plus `code_challenge_score`, `technical_interview_score`, `hired_flag`, and the degenerate measure `application_count` |
+
+R5 does not require its own dimension — it is answered directly from the measures already present in `Fact_Application`. All four surrogate-keyed dimensions were validated against R1–R5: every requirement is supported.
+
+![Star Schema](diagrams/Star-Schema.png)
+
+## 🔄 ETL Pipeline (Tasks 3–4)
+
+The pipeline (`src/extract.py`, `src/transform.py`, `src/dimensional_model.py`, orchestrated by `src/main.py`) runs in three stages:
+
+1. **Extract** — reads `data/raw/candidates.csv` into a Pandas DataFrame with no transformations, preserving the original source file.
+2. **Transform**
+   - *Data preparation:* converts Application Date to datetime (0 parsing errors), strips whitespace from text attributes, and keeps the 167 duplicate emails as distinct application rows (documented decision — grain is per application, not per unique identity).
+   - *Business transformation:* derives `Hired` (1/0) from the hiring rule, and buckets `YOE` into 5-year `YOE_Range` groups for `Dim_Candidate_Profile`.
+3. **Dimensional transformation** — builds all four dimension tables with sequential surrogate keys and the `Fact_Application` table, mapping every application to its dimension keys.
+
+**Pipeline validation results (real run against `candidates.csv`):**
+
+| Table | Rows |
+|---|---|
+| `Dim_Date` | 1,646 |
+| `Dim_Technology` | 24 |
+| `Dim_Candidate_Profile` | 42 |
+| `Dim_Country` | 244 |
+| `Fact_Application` | 50,000 (0 unmapped dimension keys) |
 
 ## 🛠️ Technologies
 
@@ -86,7 +124,7 @@ ETL-Workshop-1/
 │   └── recruitment_dw.db
 │
 ├── diagrams/
-│   └── star_schema.png
+│   └── Star-Schema.png
 │
 ├── docs/
 │
@@ -99,10 +137,8 @@ ETL-Workshop-1/
 
 ## 🚧 Next Steps
 
-- Design the dimensional Star Schema (grain, dimensions, facts) and validate it against R1–R5.
-- Implement the ETL pipeline (extract, prepare, transform).
-- Load the Data Warehouse (MySQL/PostgreSQL).
-- Generate analytical queries and KPIs.
+- Load the Data Warehouse (MySQL/PostgreSQL) via `src/load.py` and `sql/create_tables.sql`.
+- Generate analytical queries and KPIs (`sql/analytical_queries.sql`).
 - Build BI visualizations.
 - Complete final requirements validation.
 
@@ -123,4 +159,3 @@ jupytext --set-formats ipynb,py data_profiling.py --sync
 > You must be inside the folder.
 
 **More info:** https://stackoverflow.com/questions/62510114/converting-from-py-to-ipynb
-
