@@ -1,6 +1,6 @@
 # Workshop-1: From Business Requirements to a Dimensional Data Warehouse
 
-> ⚠️ This README is a work in progress. It currently covers business requirements, requirements traceability, initial data profiling, the dimensional model, and the ETL pipeline (extract, prepare, transform). Remaining sections (Data Warehouse implementation, analytical queries, BI visualization, and final validation) will be added as the project progresses.
+> ⚠️ This README is a work in progress. It currently covers everything through Task 7 (BI visualization). SQL query result screenshots are still pending upload to `results/`. Final requirements validation (Task 8) will be added once the project is complete.
 
 ## 🎯 Project Objective
 
@@ -92,9 +92,54 @@ The pipeline (`src/extract.py`, `src/transform.py`, `src/dimensional_model.py`, 
 | `Dim_Country` | 244 |
 | `Fact_Application` | 50,000 (0 unmapped dimension keys) |
 
+## 🗄️ Data Warehouse Load (Task 5)
+
+The star schema was implemented in **MySQL**, run locally. `sql/create_tables.sql` creates the `recruitment_dw` schema with surrogate primary keys on every dimension and `FOREIGN KEY` constraints on `Fact_Application` enforcing referential integrity at the database level. `src/load.py` connects via SQLAlchemy + `pymysql`, reading credentials from a local `.env` file (see `env.example`), and loads the tables in order: **dimensions → fact table**.
+
+**Load validation (real run):**
+
+| Table | Expected | Loaded | Status |
+|---|---|---|---|
+| `dim_date` | 1,646 | 1,646 | ✅ |
+| `dim_technology` | 24 | 24 | ✅ |
+| `dim_candidate_profile` | 42 | 42 | ✅ |
+| `dim_country` | 244 | 244 | ✅ |
+| `fact_application` | 50,000 | 50,000 | ✅ |
+
+**Fact rows with invalid dimension references: 0** — full referential integrity confirmed.
+
+## 📈 Analytical Queries & KPIs (Task 6)
+
+Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, were executed directly against the Data Warehouse in MySQL Workbench (never against the source CSV). Summary of findings:
+
+| Requirement | Key Finding |
+|---|---|
+| R1 | Hiring rate stayed stable year over year (12.7%–14.1%), no clear upward or downward trend. |
+| R2 | Game Development and DevOps lead in absolute hires; Development - CMS Backend has the best conversion rate (15.09%). |
+| R3 | Seniority alone shows little variation, but specific seniority + YOE combinations (e.g., Intern with 0–5 YOE) outperform the 13.4% average. |
+| R4 | Application volume is spread evenly across 244 countries (164–242 each), but hiring rates vary meaningfully (9.5%–13%+). |
+| R5 | Code Challenge and Technical Interview scores are almost equally discriminant between HIRED and NOT HIRED — neither test stands out. |
+
+*Full query text, results, and interpretations are documented in `docs/ProjectDocumentation.docx`. Screenshots of each query result are still pending upload to `results/`.*
+
+## 📊 BI Visualization (Task 7)
+
+Built in **Power BI Desktop**, connected directly to the local MySQL Data Warehouse (via the MySQL ODBC/.NET connector — see Recommendations below), never to the source CSV. Three visualizations were created:
+
+- **Temporal (R1):** hires and applications over time.
+- **Comparative (R2):** hiring outcomes by technology.
+- **Geographic (R4):** application volume and hiring rate by country.
+
+Report file: `results/Diagrams-Workshop1.pbix`. Exported images: `results/Diagram1.png`, `results/Diagram2.png`, `results/Diagram3.png`.
+
+![Hiring Trends](./results/Diagram1.png)
+![Hiring by Technology](results/Diagram2.png)
+![Geographic Recruitment Analysis](results/Diagram3.png)
+
+
 ## 🛠️ Technologies
 
-Python · Pandas · Jupyter Notebook · SQL · MySQL/PostgreSQL · Git & GitHub · BI Tool (Power BI / Tableau / Looker Studio)
+Python · Pandas · Jupyter Notebook · SQL · MySQL · Git & GitHub · Power BI
 
 ## 📁 Repository Structure
 
@@ -102,12 +147,34 @@ Python · Pandas · Jupyter Notebook · SQL · MySQL/PostgreSQL · Git & GitHub 
 ETL-Workshop-1/
 │
 ├── data/
+│   ├── processed/
 │   └── raw/
 │       └── candidates.csv
 │
+├── database/
+│   (reserved — the Data Warehouse runs on a local MySQL server,
+│    not a file-based database)
+│
+├── diagrams/
+│   └── Star-Schema.png
+│
+├── docs/
+│   ├── ETL_2026-2_Workshop-1.pdf
+│   └── ProjectDocumentation.docx
+│
 ├── notebooks/
 │   ├── data_profiling.ipynb
-|   └── data_profiling.py
+│   └── data_profiling.py
+│
+├── results/
+│   ├── Diagram1.png
+│   ├── Diagram2.png
+│   ├── Diagram3.png
+│   └── Diagrams-Workshop1.pbix
+│
+├── sql/
+│   ├── analytical_queries.sql
+│   └── create_tables.sql
 │
 ├── src/
 │   ├── extract.py
@@ -116,31 +183,62 @@ ETL-Workshop-1/
 │   ├── load.py
 │   └── main.py
 │
-├── sql/
-│   ├── create_tables.sql
-│   └── analytical_queries.sql
-│
-├── database/
-│   └── recruitment_dw.db
-│
-├── diagrams/
-│   └── Star-Schema.png
-│
-├── docs/
-│
-├── results/
-│
+├── env.example
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
 
+## ▶️ Instructions to Run the Project
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Juanseto2903/ETL-Workshop-1.git
+   cd ETL-Workshop-1
+   ```
+
+2. **Create and activate a virtual environment**
+   ```bash
+   python -m venv venv
+
+   # Windows
+   venv\Scripts\activate
+
+   # macOS / Linux
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Set up MySQL locally**
+   - Make sure a local MySQL server is running.
+   - Copy `env.example` to `.env` and fill in your MySQL credentials (`.env` is git-ignored and never committed).
+
+5. **Run the full ETL pipeline (extract → transform → dimensional model → load)**
+   ```bash
+   python src/main.py
+   ```
+   This creates the `recruitment_dw` schema (if it doesn't exist), loads all five tables, and prints a validation summary (row counts + referential integrity check).
+
+6. **Run the analytical queries**
+   - Open `sql/analytical_queries.sql` in MySQL Workbench, or run:
+     ```bash
+     mysql -u root -p recruitment_dw < sql/analytical_queries.sql
+     ```
+
+7. **Explore the BI report**
+   - Open `results/Diagrams-Workshop1.pbix` in Power BI Desktop. If the data needs to be refreshed, install the MySQL Connector/NET (see Recommendations) so Power BI can reconnect to `recruitment_dw`.
+
+8. **(Optional) Run the profiling notebook**
+   - Open `notebooks/data_profiling.ipynb` in Jupyter or VS Code (see Recommendations for the required extension).
+
 ## 🚧 Next Steps
 
-- Load the Data Warehouse (MySQL/PostgreSQL) via `src/load.py` and `sql/create_tables.sql`.
-- Generate analytical queries and KPIs (`sql/analytical_queries.sql`).
-- Build BI visualizations.
-- Complete final requirements validation.
+- Upload SQL query result screenshots to `results/`.
+- Complete final requirements validation (Task 8).
 
 ## 💡Recommendations
 
@@ -159,3 +257,8 @@ jupytext --set-formats ipynb,py data_profiling.py --sync
 > You must be inside the folder.
 
 **More info:** https://stackoverflow.com/questions/62510114/converting-from-py-to-ipynb
+
+3. For Power BI, after executing `main.py`, if you want to reproduce the project step by step and refresh `results/Diagrams-Workshop1.pbix`, you must load all the tables with their info, therefore install `mysql-connector` to analyze and visualize the diagrams.
+> But in theory, just opening the file will be fine.
+
+**Link:** https://dev.mysql.com/downloads/connector/net/

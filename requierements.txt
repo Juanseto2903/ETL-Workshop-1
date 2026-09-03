@@ -1,1 +1,6 @@
-pandas==2.2.3
+pandas==3.0.5
+SQLAlchemy==2.0.52
+PyMySQL==1.2.0
+python-dotenv==1.2.3
+jupyter==1.1.1
+jupytext==1.19.5
