@@ -1,7 +1,5 @@
 # Workshop-1: From Business Requirements to a Dimensional Data Warehouse
 
-> ⚠️ This README is a work in progress. It currently covers everything through Task 7 (BI visualization). SQL query result screenshots are still pending upload to `results/`. Final requirements validation (Task 8) will be added once the project is complete.
-
 ## 🎯 Project Objective
 
 Design and implement a dimensional Data Warehouse that transforms raw candidate application data from a technical recruitment process into an analytical system capable of supporting hiring-related business decisions, following a full Business Requirements → Data Understanding → Dimensional Modeling → ETL → Data Warehouse → Analytics → Business Decisions workflow.
@@ -45,7 +43,7 @@ The source dataset (`data/raw/candidates.csv`) contains **50,000 candidate appli
 
 - **Shape:** 50,000 rows × 10 columns.
 - **Missing values:** none found in any column.
-- **Duplicates:** no fully duplicated rows; 167 duplicate email addresses (no duplicates when checking First Name + Last Name + Email together), indicating some candidates may have applied more than once. This was addressed explicitly during data preparation (see below).
+- **Duplicates:** no fully duplicated rows; 167 duplicate email addresses (no duplicates when checking First Name + Last Name + Email together), indicating some candidates may have applied more than once. This was addressed explicitly during data preparation.
 - **Country:** 244 unique values.
 - **Seniority:** 7 unique values (Intern, Trainee, Junior, Mid-Level, Senior, Lead, Architect), almost evenly distributed (~14% each).
 - **Technology:** 24 unique values, covering roles such as Data Engineer, DevOps, Development (Backend/Frontend/FullStack/CMS), QA, Security, Business Intelligence, Sales, and more.
@@ -110,7 +108,7 @@ The star schema was implemented in **MySQL**, run locally. `sql/create_tables.sq
 
 ## 📈 Analytical Queries & KPIs (Task 6)
 
-Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, were executed directly against the Data Warehouse in MySQL Workbench (never against the source CSV). Summary of findings:
+Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, were executed directly against the Data Warehouse in MySQL Workbench (never against the source CSV). Result screenshots: `results/R1-HiringTrends-SQL.png`, `results/R2-TechnologyAnalysis-SQL.png`, `results/R3-CandidateProfile-SQL.png`, `results/R4-GeographicRecruitment-SQL.png`, `results/R5-TechnicalAssesment-SQL.png`.
 
 | Requirement | Key Finding |
 |---|---|
@@ -120,7 +118,13 @@ Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, w
 | R4 | Application volume is spread evenly across 244 countries (164–242 each), but hiring rates vary meaningfully (9.5%–13%+). |
 | R5 | Code Challenge and Technical Interview scores are almost equally discriminant between HIRED and NOT HIRED — neither test stands out. |
 
-*Full query text, results, and interpretations are documented in `docs/ProjectDocumentation.docx`. Screenshots of each query result are still pending upload to `results/`.*
+![R1-HiringTrends-SQL](./results/R1-HiringTrends-SQL.png)
+![R2-TechnologyAnalysis-SQL](./results/R2-TechnologyAnalysis-SQL.png)
+![R3-CandidateProfile-SQL](./results/R3-CandidateProfile-SQL.png)
+![R4-GeographicRecruitment-SQL](./results/R4-GeographicRecruitment-SQL.png)
+![R5-TechnicalAssesment-SQL](./results/R5-TechnicalAssesment-SQL.png)
+
+*Full query text, results, and interpretations are documented in `docs/ProjectDocumentation.docx`.*
 
 ## 📊 BI Visualization (Task 7)
 
@@ -130,12 +134,27 @@ Built in **Power BI Desktop**, connected directly to the local MySQL Data Wareho
 - **Comparative (R2):** hiring outcomes by technology.
 - **Geographic (R4):** application volume and hiring rate by country.
 
-Report file: `results/Diagrams-Workshop1.pbix`. Exported images: `results/Diagram1.png`, `results/Diagram2.png`, `results/Diagram3.png`.
+Report file: `results/Diagrams-Workshop1.pbix`.
 
 ![Hiring Trends](./results/Diagram1.png)
 ![Hiring by Technology](results/Diagram2.png)
 ![Geographic Recruitment Analysis](results/Diagram3.png)
 
+## ✅ Final Requirements Validation (Task 8)
+
+| Requirement | Implemented? | DW Tables Used | Query / KPI | Main Finding |
+|---|---|---|---|---|
+| R1 | Yes | `fact_application`, `dim_date` | Applications & hires by year, hiring rate % | Hiring rate stable between 12.7% and 14.1% year over year. |
+| R2 | Yes | `fact_application`, `dim_technology` | Applications & hires by technology, hiring rate % | Game Development/DevOps lead in absolute hires; Development - CMS Backend converts best (15.09%). |
+| R3 | Yes | `fact_application`, `dim_candidate_profile` | Applications & hires by seniority/YOE range | Specific profile combinations outperform the 13.4% overall average. |
+| R4 | Yes | `fact_application`, `dim_country` | Applications & hires by country, hiring rate % | Volume is even across countries, but hiring rates range 9.5%–13%+. |
+| R5 | Yes | `fact_application` | Avg. scores by hired_flag | Both assessments are almost equally discriminant (0.02-point difference). |
+
+**Does the final Data Warehouse provide enough information to satisfy all five business requirements?** Yes — every requirement was answered directly from the Data Warehouse via SQL, with no need to fall back on the source CSV or intermediate DataFrames.
+
+**Does the dimensional model contain elements that are not justified by the analytical requirements?** No — each dimension maps to exactly one requirement (R1–R4), every fact measure supports at least one requirement, and no dimension was created purely because a categorical column existed in the source data (personally identifying attributes were deliberately excluded).
+
+**What business decisions can now be supported by the implemented analytical system?** (1) Confirming hiring-process stability over time (R1); (2) directing sourcing investment toward technologies with better conversion, not just volume (R2); (3) refining candidate-profile prioritization based on which seniority/experience combinations convert best (R3); (4) targeting or investigating geographic recruitment strategy in countries with lower hiring rates despite similar volume (R4); and (5) concluding neither technical assessment currently needs re-weighting, though this merits revisiting with real-world (non-synthetic) data (R5).
 
 ## 🛠️ Technologies
 
@@ -152,8 +171,7 @@ ETL-Workshop-1/
 │       └── candidates.csv
 │
 ├── database/
-│   (reserved — the Data Warehouse runs on a local MySQL server,
-│    not a file-based database)
+│   └── recruitment_dw_schema_dump.sql
 │
 ├── diagrams/
 │   └── Star-Schema.png
@@ -170,7 +188,12 @@ ETL-Workshop-1/
 │   ├── Diagram1.png
 │   ├── Diagram2.png
 │   ├── Diagram3.png
-│   └── Diagrams-Workshop1.pbix
+│   ├── Diagrams-Workshop1.pbix
+│   ├── R1-HiringTrends-SQL.png
+│   ├── R2-TechnologyAnalysis-SQL.png
+│   ├── R3-CandidateProfile-SQL.png
+│   ├── R4-GeographicRecruitment-SQL.png
+│   └── R5-TechnicalAssesment-SQL.png
 │
 ├── sql/
 │   ├── analytical_queries.sql
@@ -235,11 +258,6 @@ ETL-Workshop-1/
 8. **(Optional) Run the profiling notebook**
    - Open `notebooks/data_profiling.ipynb` in Jupyter or VS Code (see Recommendations for the required extension).
 
-## 🚧 Next Steps
-
-- Upload SQL query result screenshots to `results/`.
-- Complete final requirements validation (Task 8).
-
 ## 💡Recommendations
 
 1. Install the extension `Jupyter` from Microsoft to run `data_profiling.ipynb` and visualize the results
@@ -262,3 +280,5 @@ jupytext --set-formats ipynb,py data_profiling.py --sync
 > But in theory, just opening the file will be fine.
 
 **Link:** https://dev.mysql.com/downloads/connector/net/
+
+4. `database/` holds a schema-only dump (`mysqldump --no-data`) of `recruitment_dw`, useful to inspect or recreate the table structure without needing to re-run the full ETL pipeline.

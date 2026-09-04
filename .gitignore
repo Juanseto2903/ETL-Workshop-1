@@ -2,3 +2,4 @@ processed/
 __pycache__/
 .env
 .venv
+venv
