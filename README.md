@@ -56,7 +56,16 @@ The source dataset (`data/raw/candidates.csv`) contains **50,000 candidate appli
 
 **Business process:** the candidate technical evaluation and hiring decision process.
 
-**Grain:** one row in `Fact_Application` represents one candidate application, evaluated on a specific date, for a specific technology, resulting in a Code Challenge Score, a Technical Interview Score, and a derived hiring outcome.
+### 🔑 Grain
+
+> **`Fact_Application`** — One row represents ONE candidate application to the recruitment process (the atomic unit of analysis). Each row references exactly one member of each dimension below, plus its own measures: `code_challenge_score`, `technical_interview_score`, `hired_flag` (derived), and `application_count` (degenerate, always 1).
+>
+> - **`Dim_Date`** — one row = one unique calendar date an application was submitted on (`full_date`, `year`, `quarter`, `month`, `month_name`, `day_of_week`).
+> - **`Dim_Technology`** — one row = one unique technology profile a candidate applied for (`technology_name`).
+> - **`Dim_Candidate_Profile`** — one row = one unique combination of `seniority` and `yoe_range` (5-year experience bucket).
+> - **`Dim_Country`** — one row = one unique country a candidate applied from (`country_name`).
+>
+> Every application resolves to exactly one row in each of the four dimensions, which is what makes all aggregations in Task 6 (by year, technology, seniority/experience, or country) valid groupings of the same atomic unit.
 
 | Table | Type | Purpose |
 |---|---|---|
@@ -118,21 +127,10 @@ Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, w
 | R4 | Application volume is spread evenly across 244 countries (164–242 each), but hiring rates vary meaningfully (9.5%–13%+). |
 | R5 | Code Challenge and Technical Interview scores are almost equally discriminant between HIRED and NOT HIRED — neither test stands out. |
 
-### 📸 Requirements Screenshots. Taken from MySQL Workbench
-
-#### R1-HiringTrends
 ![R1-HiringTrends-SQL](./results/R1-HiringTrends-SQL.png)
-
-#### R2-TechnologyAnalysis
 ![R2-TechnologyAnalysis-SQL](./results/R2-TechnologyAnalysis-SQL.png)
-
-#### R3-CandidateProfile
 ![R3-CandidateProfile-SQL](./results/R3-CandidateProfile-SQL.png)
-
-#### R4-GeographicRecruitment
 ![R4-GeographicRecruitment-SQL](./results/R4-GeographicRecruitment-SQL.png)
-
-#### R5-TechnicalAssesment
 ![R5-TechnicalAssesment-SQL](./results/R5-TechnicalAssesment-SQL.png)
 
 *Full query text, results, and interpretations are documented in `docs/ProjectDocumentation.docx`.*
