@@ -118,7 +118,7 @@ Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, w
 | R4 | Application volume is spread evenly across 244 countries (164–242 each), but hiring rates vary meaningfully (9.5%–13%+). |
 | R5 | Code Challenge and Technical Interview scores are almost equally discriminant between HIRED and NOT HIRED — neither test stands out. |
 
-### 📷 Pictures
+### 📸 Requirements Screenshots. Taken from MySQL Workbench
 
 #### R1-HiringTrends
 ![R1-HiringTrends-SQL](./results/R1-HiringTrends-SQL.png)
