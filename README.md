@@ -118,10 +118,21 @@ Five SQL queries (`sql/analytical_queries.sql`), one per business requirement, w
 | R4 | Application volume is spread evenly across 244 countries (164–242 each), but hiring rates vary meaningfully (9.5%–13%+). |
 | R5 | Code Challenge and Technical Interview scores are almost equally discriminant between HIRED and NOT HIRED — neither test stands out. |
 
+### 📷 Pictures
+
+#### R1-HiringTrends
 ![R1-HiringTrends-SQL](./results/R1-HiringTrends-SQL.png)
+
+#### R2-TechnologyAnalysis
 ![R2-TechnologyAnalysis-SQL](./results/R2-TechnologyAnalysis-SQL.png)
+
+#### R3-CandidateProfile
 ![R3-CandidateProfile-SQL](./results/R3-CandidateProfile-SQL.png)
+
+#### R4-GeographicRecruitment
 ![R4-GeographicRecruitment-SQL](./results/R4-GeographicRecruitment-SQL.png)
+
+#### R5-TechnicalAssesment
 ![R5-TechnicalAssesment-SQL](./results/R5-TechnicalAssesment-SQL.png)
 
 *Full query text, results, and interpretations are documented in `docs/ProjectDocumentation.docx`.*
@@ -166,12 +177,8 @@ Python · Pandas · Jupyter Notebook · SQL · MySQL · Git & GitHub · Power BI
 ETL-Workshop-1/
 │
 ├── data/
-│   ├── processed/
 │   └── raw/
 │       └── candidates.csv
-│
-├── database/
-│   └── recruitment_dw_schema_dump.sql
 │
 ├── diagrams/
 │   └── Star-Schema.png
@@ -222,13 +229,13 @@ ETL-Workshop-1/
 
 2. **Create and activate a virtual environment**
    ```bash
-   python -m venv venv
+   python -m venv .venv
 
    # Windows
-   venv\Scripts\activate
+   .venv\Scripts\activate
 
    # macOS / Linux
-   source venv/bin/activate
+   source .venv/bin/activate
    ```
 
 3. **Install dependencies**
@@ -280,5 +287,3 @@ jupytext --set-formats ipynb,py data_profiling.py --sync
 > But in theory, just opening the file will be fine.
 
 **Link:** https://dev.mysql.com/downloads/connector/net/
-
-4. `database/` holds a schema-only dump (`mysqldump --no-data`) of `recruitment_dw`, useful to inspect or recreate the table structure without needing to re-run the full ETL pipeline.
